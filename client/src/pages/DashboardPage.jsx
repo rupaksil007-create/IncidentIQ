@@ -37,10 +37,11 @@ import { useAuth } from '../context/AuthContext';
 
 // --- Sub-components ---
 
-const StatCard = ({ icon, label, value, trend, colorClass }) => (
+const StatCard = ({ icon, label, value, trend, colorClass, tooltip }) => (
   <motion.div 
     whileHover={{ y: -5, scale: 1.02 }}
-    className="glass-card !p-6 relative group border-white/5"
+    className="glass-card !p-6 relative group border-white/5 cursor-help"
+    title={tooltip}
   >
     <div className={`absolute top-0 right-0 w-24 h-24 blur-[40px] opacity-10 group-hover:opacity-20 transition-opacity -mr-8 -mt-8 ${colorClass}`} />
     <div className="flex items-center gap-4 mb-4">
@@ -50,8 +51,8 @@ const StatCard = ({ icon, label, value, trend, colorClass }) => (
       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</span>
     </div>
     <div className="flex items-end justify-between">
-      <h3 className="text-3xl font-black tracking-tighter">{value}</h3>
-      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend.startsWith('+') ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+      <h3 className="text-3xl font-black tracking-tighter tabular-nums">{value}</h3>
+      <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend.startsWith('+') ? (label === 'Cluster Load' ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500') : (label === 'Cluster Load' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500')}`}>
         {trend}
       </span>
     </div>
@@ -461,6 +462,87 @@ const SystemNodesTab = () => (
   </div>
 );
 
+const NotificationCentre = ({ notifications, onMarkRead, navigate }) => {
+  if (notifications.length === 0) {
+    return (
+      <div className="glass-card !p-12 flex flex-col items-center justify-center text-center border-dashed border-2 border-white/5 bg-transparent">
+        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-6">
+           <Bell size={24} className="text-gray-600" />
+        </div>
+        <h3 className="text-xl font-bold mb-2">System Operating Normally</h3>
+        <p className="text-gray-500 max-w-xs text-sm">No active alerts or system notifications detected at this time.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-6">
+         <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">Latest System Events</div>
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Live Monitoring Active</span>
+         </div>
+      </div>
+      {notifications.map((notification, i) => (
+        <motion.div
+          key={notification.id}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: i * 0.05 }}
+          onClick={() => {
+            onMarkRead(notification.id);
+            if (notification.incidentId) navigate(`/incident/${notification.incidentId}`);
+          }}
+          className={`glass-card !p-6 flex items-start gap-6 border-white/5 hover:border-indigo-500/30 transition-all cursor-pointer group relative overflow-hidden ${!notification.read ? 'bg-indigo-500/[0.03]' : ''}`}
+        >
+          {!notification.read && <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />}
+          
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+            notification.type === 'critical' ? 'bg-red-500/10 text-red-500' :
+            notification.type === 'warning' ? 'bg-orange-500/10 text-orange-500' :
+            notification.type === 'ai' ? 'bg-indigo-500/10 text-indigo-400' :
+            'bg-green-500/10 text-green-500'
+          }`}>
+             {notification.type === 'critical' && <AlertTriangle size={20} />}
+             {notification.type === 'warning' && <Zap size={20} />}
+             {notification.type === 'ai' && <Activity size={20} />}
+             {notification.type === 'success' && <CheckCircle2 size={20} />}
+          </div>
+
+          <div className="flex-1 min-w-0">
+             <div className="flex items-center justify-between mb-1">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${
+                  notification.type === 'critical' ? 'text-red-500' :
+                  notification.type === 'warning' ? 'text-orange-500' :
+                  notification.type === 'ai' ? 'text-indigo-400' :
+                  'text-green-500'
+                }`}>
+                  {notification.type} alert
+                </span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">
+                   {new Date(notification.timestamp).toLocaleTimeString()}
+                </span>
+             </div>
+             <p className={`text-sm font-medium ${!notification.read ? 'text-white' : 'text-gray-400'} group-hover:text-white transition-colors truncate`}>
+                {notification.message}
+             </p>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-4">
+             {notification.incidentId && (
+               <div className="flex items-center gap-2 text-indigo-400 group-hover:translate-x-1 transition-transform opacity-0 group-hover:opacity-100">
+                  <span className="text-[10px] font-black uppercase tracking-widest">Investigate</span>
+                  <ChevronRight size={14} />
+               </div>
+             )}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
 const LogStreamTab = () => {
   const [stream, setStream] = useState([]);
   
@@ -525,8 +607,75 @@ const DashboardPage = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [settings, setSettings] = useState({ demoMode: true });
   const [history, setHistory] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [metrics, setMetrics] = useState({
+    systemIntegrity: 98.2,
+    avgResolveTime: 14,
+    clusterLoad: 42,
+    activeFaults: 0,
+    trends: { integrity: '+0.1%', load: '+2%', resolve: '-2m', faults: '+0' }
+  });
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+
+  const fetchMetrics = async () => {
+    try {
+      const { data } = await axios.get('http://localhost:5000/api/metrics');
+      setMetrics(data);
+    } catch (err) {
+      console.error("Metrics Fetch Error:", err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await axios.get('http://localhost:5000/api/notifications');
+      setNotifications(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+    fetchNotifications();
+    fetchMetrics();
+
+    // Poll metrics every 5 seconds
+    const metricsInterval = setInterval(fetchMetrics, 5000);
+    return () => clearInterval(metricsInterval);
+  }, []);
+
+  // Real-time Simulation
+  useEffect(() => {
+    const templates = [
+      { type: 'critical', message: '🚨 Database connection failure on cluster-prod-01' },
+      { type: 'warning', message: '⚠️ CPU spike detected on node-ap-03 (92%)' },
+      { type: 'ai', message: '🤖 AI: Anomaly detected in traffic pattern (Possible DDoS)' },
+      { type: 'success', message: '✅ Autoscaling triggered: added 2 new nodes' },
+      { type: 'warning', message: '⚠️ SSL Certificate for api.incidentiq.com expires in 3 days' },
+      { type: 'ai', message: '🤖 AI: Predictive analysis suggests potential disk failure on node-ap-05' }
+    ];
+
+    const interval = setInterval(() => {
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      const newNotification = {
+        id: `nt_${Math.random().toString(36).substr(2, 5)}`,
+        ...template,
+        timestamp: new Date().toISOString(),
+        incidentId: 'inc_01',
+        read: false
+      };
+      setNotifications(prev => [newNotification, ...prev].slice(0, 20));
+      showToast(template.message, "info");
+    }, 15000); // Every 15 seconds to not be too spammy but feel alive
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const markAsRead = (id) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
 
   const handleLogout = () => {
     logout();
@@ -693,7 +842,7 @@ const DashboardPage = () => {
             { id: 'incidents', icon: <AlertTriangle size={18} />, label: 'Active Faults' },
             { id: 'systems', icon: <Server size={18} />, label: 'System Nodes' },
             { id: 'logs', icon: <Terminal size={18} />, label: 'Log Stream' },
-            { id: 'alerts', icon: <Bell size={18} />, label: 'Notification' },
+            { id: 'alerts', icon: <Bell size={18} />, label: 'Notification', badge: notifications.filter(n => !n.read).length },
           ].map(item => (
             <button
               key={item.id}
@@ -701,7 +850,7 @@ const DashboardPage = () => {
                 setActiveTab(item.id);
                 showToast(`Switched to ${item.label}`, "info");
               }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all group ${
+              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all group relative ${
                 activeTab === item.id ? 'bg-white/10 text-white font-bold' : 'text-gray-500 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -709,6 +858,11 @@ const DashboardPage = () => {
                 {item.icon}
               </div>
               <span className="text-sm tracking-tight">{item.label}</span>
+              {item.badge > 0 && (
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-500 text-[10px] font-black flex items-center justify-center text-white shadow-lg shadow-red-500/20 animate-pulse">
+                   {item.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -787,30 +941,34 @@ const DashboardPage = () => {
                     <StatCard 
                       icon={<Activity size={20} />} 
                       label="System Integrity" 
-                      value="98.2%" 
-                      trend="+0.4%" 
-                      colorClass="bg-green-500"
+                      value={`${metrics.systemIntegrity.toFixed(1)}%`} 
+                      trend={metrics.trends.integrity} 
+                      colorClass={metrics.systemIntegrity > 95 ? "bg-green-500" : "bg-red-500"}
+                      tooltip="Overall system health score based on error rates and availability."
                     />
                     <StatCard 
                       icon={<AlertTriangle size={20} />} 
                       label="Active Faults" 
-                      value={history.length.toString()} 
-                      trend="+2" 
-                      colorClass="bg-red-500"
+                      value={metrics.activeFaults.toString()} 
+                      trend={metrics.trends.faults} 
+                      colorClass={metrics.activeFaults === 0 ? "bg-green-500" : "bg-red-500"}
+                      tooltip="Correlated system anomalies requiring immediate attention."
                     />
                     <StatCard 
                       icon={<Clock size={20} />} 
                       label="Avg Resolve" 
-                      value="14m" 
-                      trend="-4m" 
+                      value={`${Math.round(metrics.avgResolveTime)}m`} 
+                      trend={metrics.trends.resolve} 
                       colorClass="bg-indigo-500"
+                      tooltip="Average time taken by AI and engineers to resolve critical incidents."
                     />
                     <StatCard 
                       icon={<Cpu size={20} />} 
                       label="Cluster Load" 
-                      value="42%" 
-                      trend="+12%" 
-                      colorClass="bg-indigo-500"
+                      value={`${Math.round(metrics.clusterLoad)}%`} 
+                      trend={metrics.trends.load} 
+                      colorClass={metrics.clusterLoad > 80 ? "bg-red-500" : "bg-indigo-500"}
+                      tooltip="Aggregate CPU and RAM usage across all production nodes."
                     />
                   </div>
                   
@@ -869,11 +1027,13 @@ const DashboardPage = () => {
                   <div className="space-y-8">
                     <div>
                       <h1 className="text-4xl font-black mb-2 tracking-tighter">Notification Center</h1>
-                      <p className="text-gray-500 text-sm font-medium">Critical system notifications and audit logs.</p>
+                      <p className="text-gray-500 text-sm font-medium">Critical system notifications and audit logs actively correlated by AI.</p>
                     </div>
-                    <div className="glass-card !p-8">
-                       <p className="text-gray-500 italic">No new notifications. Everything looks clear.</p>
-                    </div>
+                    <NotificationCentre 
+                      notifications={notifications} 
+                      onMarkRead={markAsRead} 
+                      navigate={navigate} 
+                    />
                   </div>
                 </motion.div>
               )}

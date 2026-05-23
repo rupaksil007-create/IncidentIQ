@@ -38,6 +38,41 @@ let incidentHistory = [
   }
 ];
 
+let notifications = [
+  {
+    id: 'nt_01',
+    type: 'critical',
+    message: '🚨 Redis Persistence Failure detected on node-ap-08',
+    timestamp: new Date(Date.now() - 600000).toISOString(),
+    incidentId: 'inc_01',
+    read: false
+  },
+  {
+    id: 'nt_02',
+    type: 'ai',
+    message: '🤖 AI: Root cause identified as Memory Pressure (98%)',
+    timestamp: new Date(Date.now() - 540000).toISOString(),
+    incidentId: 'inc_01',
+    read: false
+  },
+  {
+    id: 'nt_03',
+    type: 'warning',
+    message: '⚠️ High latency detected in US-EAST-1 gateway',
+    timestamp: new Date(Date.now() - 300000).toISOString(),
+    incidentId: 'inc_02',
+    read: true
+  },
+  {
+    id: 'nt_04',
+    type: 'success',
+    message: '✅ Recovery initiated for Order-Service',
+    timestamp: new Date(Date.now() - 120000).toISOString(),
+    incidentId: 'inc_01',
+    read: true
+  }
+];
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
@@ -46,7 +81,55 @@ app.get('/api/incident-history', (req, res) => {
   res.json(incidentHistory);
 });
 
-app.get('/api/incident/:id', (req, res) => {
+app.get('/api/notifications', (req, res) => {
+  res.json(notifications);
+});
+
+// Simulated Dynamic Metrics
+let currentMetrics = {
+  systemIntegrity: 98.2,
+  avgResolveTime: 14,
+  clusterLoad: 42,
+  activeFaults: incidentHistory.length
+};
+
+const updateMetrics = () => {
+  // Fluctuations
+  const loadChange = (Math.random() - 0.5) * 5; // ±2.5%
+  currentMetrics.clusterLoad = Math.max(10, Math.min(99, currentMetrics.clusterLoad + loadChange));
+
+  const integrityChange = (Math.random() - 0.5) * 0.4; // ±0.2%
+  currentMetrics.systemIntegrity = Math.max(70, Math.min(100, currentMetrics.systemIntegrity + integrityChange));
+
+  // Correlation: High load reduces integrity
+  if (currentMetrics.clusterLoad > 85) {
+    currentMetrics.systemIntegrity -= 0.5;
+  }
+
+  // Correlation: High faults reduce integrity
+  if (currentMetrics.activeFaults > 5) {
+    currentMetrics.systemIntegrity -= 1;
+  }
+
+  currentMetrics.avgResolveTime = Math.max(5, Math.min(60, currentMetrics.avgResolveTime + (Math.random() - 0.5)));
+};
+
+setInterval(updateMetrics, 5000);
+
+app.get('/api/metrics', (req, res) => {
+  currentMetrics.activeFaults = incidentHistory.length; // Sync with history
+  res.json({
+    ...currentMetrics,
+    trends: {
+      integrity: currentMetrics.systemIntegrity > 95 ? '+0.2%' : '-0.5%',
+      load: currentMetrics.clusterLoad > 80 ? '+15%' : '+2%',
+      resolve: '-2m',
+      faults: '+1'
+    }
+  });
+});
+
+app.get('/api/demo-incident', (req, res) => {
   const { id } = req.params;
   
   const incidentBase = incidentHistory.find(i => i.id === id) || {
