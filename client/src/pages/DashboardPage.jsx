@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, 
@@ -381,7 +382,7 @@ const OverviewTab = ({ logs, setLogs, handleAnalyze, loading, analysis, history,
   </div>
 );
 
-const ActiveFaultsTab = ({ history }) => (
+const ActiveFaultsTab = ({ history, navigate }) => (
   <div className="space-y-8">
     <div>
       <h1 className="text-4xl font-black mb-2 tracking-tighter">Active Fault Explorer</h1>
@@ -414,7 +415,10 @@ const ActiveFaultsTab = ({ history }) => (
           </div>
           <div className="text-right">
             <div className="text-xs font-bold text-gray-400 mb-2">{new Date(incident.timestamp).toLocaleString()}</div>
-            <button className="btn-premium btn-secondary !py-2 !px-5 !text-[10px] !rounded-lg border-white/10 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+            <button 
+              onClick={() => navigate(`/incident/${incident.id}`)}
+              className="btn-premium btn-secondary !py-2 !px-5 !text-[10px] !rounded-lg border-white/10 group-hover:bg-indigo-500 group-hover:text-white transition-all"
+            >
               Investigate Node
             </button>
           </div>
@@ -512,6 +516,7 @@ const LogStreamTab = () => {
 // --- Main Dashboard Page ---
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const { user, logout } = useAuth();
   const [logs, setLogs] = useState('');
@@ -828,7 +833,7 @@ const DashboardPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  <ActiveFaultsTab history={history} />
+                  <ActiveFaultsTab history={history} navigate={navigate} />
                 </motion.div>
               )}
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
+import IncidentInvestigationPage from './pages/IncidentInvestigationPage';
 import AuthPage from './pages/AuthPage';
 import { ToastProvider } from './components/ui/Toast';
 import { AuthProvider } from './context/AuthContext';
@@ -23,6 +24,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <DashboardPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/incident/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <IncidentInvestigationPage />
                       </ProtectedRoute>
                     } 
                   />

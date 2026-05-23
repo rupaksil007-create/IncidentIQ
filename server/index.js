@@ -45,6 +45,74 @@ app.get('/api/incident-history', (req, res) => {
   res.json(incidentHistory);
 });
 
+app.get('/api/incident/:id', (req, res) => {
+  const { id } = req.params;
+  
+  // Find the incident from history or generate mock data
+  const incidentBase = incidentHistory.find(i => i.id === id) || {
+    id: id,
+    timestamp: new Date().toISOString(),
+    rootCause: 'Unknown System Anomaly',
+    severity: 'High',
+    affectedService: 'System-Kernel'
+  };
+
+  const mockData = {
+    ...incidentBase,
+    affectedNode: 'node-ap-08',
+    status: 'Investigating',
+    confidenceScore: 91,
+    aiAnalysis: "IncidentIQ detected abnormal persistence failures in Redis caused by elevated memory pressure and append-only log corruption. The primary node failed to flush the AOF buffer within the allocated timeout, leading to a cascade failure across the replica set.",
+    logs: [
+      { time: '00:02:11', msg: 'Redis persistence timeout', level: 'error' },
+      { time: '00:02:12', msg: 'Memory threshold exceeded (98%)', level: 'warn' },
+      { time: '00:02:13', msg: 'Disk sync failed: EIO: i/o error', level: 'error' },
+      { time: '00:02:15', msg: 'Replica degraded: node-ap-08-b', level: 'critical' },
+      { time: '00:02:20', msg: 'AOF corruption detected at offset 0x445A2', level: 'critical' }
+    ],
+    timeline: [
+      { time: '00:01:55', event: 'Latency spike detected in US-EAST-1' },
+      { time: '00:02:03', event: 'Cache writes failed for Order-Service' },
+      { time: '00:02:10', event: 'Redis persistence failure triggered' },
+      { time: '00:02:15', event: 'Critical alert generated: P1' },
+      { time: '00:02:20', event: 'IncidentIQ automated investigation started' }
+    ],
+    recommendations: [
+      { 
+        action: 'Restart Redis replica', 
+        explanation: 'Forcing a restart will trigger a clean AOF reload from the last snapshot.', 
+        impact: 'Low', 
+        recovery: '2 mins' 
+      },
+      { 
+        action: 'Increase persistence buffer', 
+        explanation: 'Increasing the aof-rewrite-incremental-fsync buffer will prevent I/O blocking.', 
+        impact: 'Medium', 
+        recovery: 'Immediate' 
+      },
+      { 
+        action: 'Enable Redis failover', 
+        explanation: 'Promote node-ap-08-b to primary to restore service while investigating node-ap-08.', 
+        impact: 'High', 
+        recovery: '30 secs' 
+      }
+    ],
+    metrics: {
+      riskScore: 87,
+      recoveryProbability: 92,
+      blastRadius: 'Medium',
+      health: {
+        cpu: 88,
+        ram: 96,
+        latency: 45,
+        healthScore: 42
+      }
+    }
+  };
+
+  res.json(mockData);
+});
+
 app.get('/api/demo-incident', (req, res) => {
   const demoData = {
     logs: `
