@@ -429,35 +429,200 @@ const ActiveFaultsTab = ({ history, navigate }) => (
   </div>
 );
 
-const SystemNodesTab = () => (
-  <div className="space-y-8">
-    <div>
-      <h1 className="text-4xl font-black mb-2 tracking-tighter">Cluster Node Topology</h1>
-      <p className="text-gray-500 text-sm font-medium">Real-time health status of your infrastructure nodes.</p>
+const SystemNodesTab = ({ nodes, onSelectNode }) => (
+  <div className="space-y-10">
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-4xl font-black mb-2 tracking-tighter">Cluster Node Topology</h1>
+        <p className="text-gray-500 text-sm font-medium">Real-time health status of your infrastructure nodes.</p>
+      </div>
+      <div className="flex items-center gap-6">
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Healthy</span>
+         </div>
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-orange-500" />
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Warning</span>
+         </div>
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Critical</span>
+         </div>
+      </div>
     </div>
     
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-      {Array.from({ length: 15 }).map((_, i) => (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      {nodes.map((node, i) => (
         <motion.div
-          key={i}
+          key={node.id}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: i * 0.05 }}
-          className="glass-card !p-6 flex flex-col items-center text-center gap-4 group cursor-pointer hover:bg-white/[0.05] transition-all"
+          transition={{ delay: i * 0.03 }}
+          onClick={() => onSelectNode(node)}
+          className={`glass-card !p-6 flex flex-col gap-5 group cursor-pointer transition-all relative overflow-hidden ${
+            node.status === 'critical' ? 'border-red-500/40 bg-red-500/[0.02] shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 
+            node.status === 'warning' ? 'border-orange-500/40 bg-orange-500/[0.02]' : 
+            'border-white/5 hover:border-indigo-500/30'
+          }`}
         >
-          <div className="relative">
-             <Server size={32} className={`${i % 7 === 0 ? 'text-red-500' : 'text-green-500'} group-hover:scale-110 transition-transform`} />
-             <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-black ${i % 7 === 0 ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`} />
+          {node.status === 'critical' && <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse" />}
+          
+          <div className="flex items-start justify-between">
+            <div className={`p-3 rounded-2xl ${
+              node.status === 'critical' ? 'bg-red-500/10 text-red-500' : 
+              node.status === 'warning' ? 'bg-orange-500/10 text-orange-500' : 
+              'bg-white/5 text-indigo-400 group-hover:text-white'
+            } transition-colors`}>
+               <Server size={24} className={node.status === 'critical' ? 'animate-bounce' : ''} />
+            </div>
+            <div className={`w-2 h-2 rounded-full ${
+              node.status === 'critical' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse' : 
+              node.status === 'warning' ? 'bg-orange-500' : 
+              'bg-green-500'
+            }`} />
           </div>
+
           <div>
-            <div className="text-xs font-black tracking-tight mb-1">node-ap-0{i+1}</div>
-            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">US-EAST-1A</div>
+            <div className="text-sm font-black tracking-tight mb-1 group-hover:text-indigo-400 transition-colors uppercase">{node.id}</div>
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{node.region}</div>
           </div>
-          <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-             <div className={`h-full ${i % 7 === 0 ? 'w-[98%] bg-red-500' : 'w-[45%] bg-indigo-500'}`} />
+
+          <div className="space-y-3">
+             <div>
+                <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase mb-1">
+                   <span>CPU Usage</span>
+                   <span className={node.cpu > 80 ? 'text-red-500' : 'text-gray-300'}>{Math.round(node.cpu)}%</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                   <motion.div 
+                     animate={{ width: `${node.cpu}%` }} 
+                     className={`h-full ${node.cpu > 85 ? 'bg-red-500' : node.cpu > 65 ? 'bg-orange-500' : 'bg-indigo-500'}`} 
+                   />
+                </div>
+             </div>
+             <div>
+                <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase mb-1">
+                   <span>RAM Usage</span>
+                   <span className={node.memory > 85 ? 'text-red-500' : 'text-gray-300'}>{Math.round(node.memory)}%</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                   <motion.div 
+                     animate={{ width: `${node.memory}%` }} 
+                     className={`h-full ${node.memory > 90 ? 'bg-red-500' : node.memory > 75 ? 'bg-orange-500' : 'bg-indigo-500'}`} 
+                   />
+                </div>
+             </div>
+          </div>
+          
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+             <div className="flex items-center gap-1">
+                <Clock size={10} className="text-gray-600" />
+                <span className="text-[9px] font-bold text-gray-500">{Math.round(node.latency)}ms</span>
+             </div>
+             <ChevronRight size={14} className="text-gray-600 group-hover:text-white transition-all transform group-hover:translate-x-1" />
           </div>
         </motion.div>
       ))}
+    </div>
+  </div>
+);
+
+const NodeDetailPanel = ({ node, onClose }) => {
+  if (!node) return null;
+
+  const aiInsight = node.status === 'critical' ? 'High resource pressure detected. Possible kernel panic risk if memory exceeds 98%.' :
+                    node.status === 'warning' ? 'Elevated CPU utilization. Predictive analysis suggests horizontal scaling may be required.' :
+                    'Node performing within optimal parameters. Stability index is 0.98.';
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      className="fixed top-0 right-0 bottom-0 w-96 bg-black/40 backdrop-blur-2xl border-l border-white/10 z-[110] p-8 overflow-y-auto"
+    >
+      <div className="flex items-center justify-between mb-10">
+         <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/5">
+               <Server size={20} className="text-indigo-400" />
+            </div>
+            <h2 className="text-xl font-black uppercase italic tracking-tighter">{node.id}</h2>
+         </div>
+         <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500 hover:text-white">
+            <X size={24} />
+         </button>
+      </div>
+
+      <div className="space-y-8">
+         <div className="glass-card !p-6 border-white/5 bg-white/[0.02]">
+            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Health Audit</div>
+            <div className="flex items-center gap-4 mb-6">
+               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${
+                 node.status === 'critical' ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'
+               }`}>
+                  {node.status === 'critical' ? '22%' : '94%'}
+               </div>
+               <div>
+                  <div className="text-sm font-bold capitalize">{node.status} Status</div>
+                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Region: {node.region}</div>
+               </div>
+            </div>
+            <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+               <div className="flex items-center gap-2 mb-2">
+                  <Shield size={12} className="text-indigo-400" />
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">AI Intelligence</span>
+               </div>
+               <p className="text-[11px] text-gray-300 font-medium leading-relaxed">
+                  "{aiInsight}"
+               </p>
+            </div>
+         </div>
+
+         <div className="space-y-6">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Performance Metrics</h3>
+            <div className="space-y-6">
+               <MetricProgress label="CPU Utilization" value={node.cpu} color="bg-indigo-500" />
+               <MetricProgress label="Memory Load" value={node.memory} color="bg-red-500" />
+               <MetricProgress label="Network Latency" value={node.latency / 5} color="bg-green-500" suffix="ms" realValue={node.latency} />
+            </div>
+         </div>
+
+         <div className="pt-8 border-t border-white/5">
+            <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Recent Audit Logs</h3>
+            <div className="space-y-3 font-mono text-[10px] text-gray-500">
+               <div className="flex gap-3">
+                  <span className="text-indigo-500/60">[00:02:11]</span>
+                  <span>Health check verified successful</span>
+               </div>
+               <div className="flex gap-3">
+                  <span className="text-indigo-500/60">[00:02:15]</span>
+                  <span>Telemetry buffer flush complete</span>
+               </div>
+               {node.status === 'critical' && (
+                 <div className="flex gap-3 text-red-400">
+                    <span className="text-red-500/60">[00:02:20]</span>
+                    <span className="font-bold">CRITICAL: Resource threshold exceeded</span>
+                 </div>
+               )}
+            </div>
+         </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const MetricProgress = ({ label, value, color, suffix = "%", realValue }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tight text-gray-400">
+       <span>{label}</span>
+       <span className="text-white">{Math.round(realValue || value)}{suffix}</span>
+    </div>
+    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+       <motion.div 
+         animate={{ width: `${value}%` }} 
+         className={`h-full ${color}`} 
+       />
     </div>
   </div>
 );
@@ -608,6 +773,17 @@ const DashboardPage = () => {
   const [settings, setSettings] = useState({ demoMode: true });
   const [history, setHistory] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [nodes, setNodes] = useState(
+    Array.from({ length: 15 }).map((_, i) => ({
+      id: `node-ap-0${i + 1}`,
+      cpu: 20 + Math.random() * 40,
+      memory: 30 + Math.random() * 50,
+      latency: 40 + Math.random() * 100,
+      status: 'healthy',
+      region: 'US-EAST-1A'
+    }))
+  );
+  const [selectedNode, setSelectedNode] = useState(null);
   const [metrics, setMetrics] = useState({
     systemIntegrity: 98.2,
     avgResolveTime: 14,
@@ -646,7 +822,59 @@ const DashboardPage = () => {
     return () => clearInterval(metricsInterval);
   }, []);
 
-  // Real-time Simulation
+  // Node Simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNodes(prev => prev.map(node => {
+        // Random fluctuation
+        const cpuChange = (Math.random() - 0.5) * 10;
+        const memChange = (Math.random() - 0.5) * 8;
+        
+        const newCpu = Math.max(5, Math.min(99, node.cpu + cpuChange));
+        const newMem = Math.max(10, Math.min(99, node.memory + memChange));
+        
+        let status = 'healthy';
+        if (newCpu > 85 || newMem > 90) status = 'critical';
+        else if (newCpu > 70 || newMem > 80) status = 'warning';
+
+        // Trigger Alert if newly critical
+        if (status === 'critical' && node.status !== 'critical') {
+          const alertMsg = `🚨 Critical resource pressure on ${node.id} (${Math.round(newCpu)}% CPU)`;
+          showToast(alertMsg, "error");
+          
+          const newId = `inc_${Math.random().toString(36).substr(2, 4)}`;
+          setNotifications(prevN => [{
+            id: `nt_${Math.random().toString(36).substr(2, 5)}`,
+            type: 'critical',
+            message: alertMsg,
+            timestamp: new Date().toISOString(),
+            incidentId: newId,
+            read: false
+          }, ...prevN].slice(0, 20));
+
+          setHistory(prevH => [{
+            id: newId,
+            timestamp: new Date().toISOString(),
+            rootCause: `${node.id} Performance Degradation`,
+            severity: 'Critical',
+            affectedService: node.id.includes('ap-02') ? 'Primary Database' : 'Application Layer'
+          }, ...prevH].slice(0, 10));
+        }
+
+        return {
+          ...node,
+          cpu: newCpu,
+          memory: newMem,
+          latency: Math.max(20, Math.min(500, node.latency + (Math.random() - 0.5) * 20)),
+          status
+        };
+      }));
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [showToast]);
+
+  // Real-time Simulation (Alerts)
   useEffect(() => {
     const templates = [
       { type: 'critical', message: '🚨 Database connection failure on cluster-prod-01' },
@@ -1002,7 +1230,15 @@ const DashboardPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
-                  <SystemNodesTab />
+                  <SystemNodesTab nodes={nodes} onSelectNode={setSelectedNode} />
+                  <AnimatePresence>
+                    {selectedNode && (
+                      <NodeDetailPanel 
+                        node={selectedNode} 
+                        onClose={() => setSelectedNode(null)} 
+                      />
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
 
