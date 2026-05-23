@@ -1,0 +1,15 @@
+@import './styles/theme.css';
+@import './styles/components.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* We keep Tailwind for utility-based layout tweaks (flex, grid, spacing) 
+   but all premium styling is handled in the custom CSS files. */
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}

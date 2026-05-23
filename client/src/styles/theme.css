@@ -1,0 +1,81 @@
+:root {
+  /* Colors */
+  --bg-color: #030303;
+  --fg-color: #ffffff;
+  --brand-primary: #6366f1; /* Indigo */
+  --brand-secondary: #22d3ee; /* Cyan */
+  --brand-accent: #bef264; /* Cyber Lime */
+  --brand-error: #ef4444;
+  --brand-warning: #f59e0b;
+  --brand-success: #10b981;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 20px;
+  --glass-blur-lg: 40px;
+  --glass-blur-xl: 64px;
+
+  /* Shadows & Glows */
+  --glow-primary: 0 0 20px rgba(99, 102, 241, 0.3);
+  --glow-secondary: 0 0 20px rgba(34, 211, 238, 0.3);
+  --glow-accent: 0 0 20px rgba(190, 242, 100, 0.3);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+
+  /* Transitions */
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Spacing */
+  --space-unit: 4px;
+}
+
+/* Global Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--fg-color);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Premium Background System */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
+    var(--bg-color);
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 50% 50%, black 40%, transparent 100%);
+}
+
+.bg-glow-orb {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+  z-index: -1;
+  transition: transform 0.1s ease-out;
+}
