@@ -51,12 +51,7 @@ const AuthPage = () => {
       showToast(`Welcome back, ${data.user.name}!`, 'success');
       navigate('/dashboard');
     } catch (err) {
-      if (err.response?.data?.unverified) {
-        setView('verify');
-        showToast(err.response?.data?.error || 'Please verify your email to continue.', 'info');
-      } else {
-        showToast(err.response?.data?.error || 'Login failed', 'error');
-      }
+      showToast(err.response?.data?.error || 'Login failed', 'error');
     } finally {
       setLoading(false);
     }
@@ -67,8 +62,8 @@ const AuthPage = () => {
     setLoading(true);
     try {
       await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
-      showToast('Account created! Check your email for the OTP.', 'success');
-      setView('verify');
+      showToast('Account created! You can now log in.', 'success');
+      setView('login');
     } catch (err) {
       showToast(err.response?.data?.error || 'Signup failed', 'error');
     } finally {
